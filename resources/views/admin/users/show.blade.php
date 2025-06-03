@@ -1,4 +1,4 @@
-show.blade.php@extends('layouts.admin.app')
+@extends('layouts.admin.app')
 
 @section('title', 'User Details: ' . $user->name)
 @section('page-title', 'User Profile')
@@ -182,7 +182,7 @@ show.blade.php@extends('layouts.admin.app')
 </div>
 @endsection
 
-@push('styles')
+@section('styles')
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
         .profile-user-img { border: 3px solid #adb5bd; margin: 0 auto; padding: 3px; width: 100px; }
@@ -201,9 +201,9 @@ show.blade.php@extends('layouts.admin.app')
             color: rgba(255,255,255,0.7);
         }
     </style>
-@endpush
+@endsection
 
-@push('scripts')
+@section('scripts')
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
@@ -213,4 +213,4 @@ show.blade.php@extends('layouts.admin.app')
             });
         });
     </script>
-@endpush
+@endsection

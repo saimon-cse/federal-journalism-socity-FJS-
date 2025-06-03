@@ -34,6 +34,8 @@ class RolePermissionSeeder extends Seeder
             'manage-complaints',
             'access-admin-profile', // For admin's own profile
             // Add more permissions as your application grows
+            'manage-memberships', 'view-memberships',
+                        'manage-payment-accounts',
         ];
 
         foreach ($permissions as $permission) {
@@ -59,6 +61,7 @@ class RolePermissionSeeder extends Seeder
             'manage-job-postings', 'view-job-applications',
             'manage-complaints',
             'access-admin-profile',
+
         ]);
 
         // Member

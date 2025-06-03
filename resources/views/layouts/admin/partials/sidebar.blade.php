@@ -75,6 +75,58 @@ use App\Models\Setting;
         </div>
         @endcanany
 
+                {{-- ... Other sections ... --}}
+        @canany(['manage-memberships', 'view-memberships'])
+        <div class="nav-section">
+            <div class="nav-section-title">Membership</div>
+            <ul>
+                <li>
+                    <a href="{{ route('admin.membership.applications.index') }}" class="nav-item {{ request()->routeIs('admin.membership.applications.*') ? 'active' : '' }}">
+                        <i class="fas fa-id-card-alt nav-icon"></i>
+                        <span>Applications</span>
+                        {{-- You can add a badge for pending count here later --}}
+                    </a>
+                </li>
+                 {{-- Add link to list all active members later --}}
+                 {{-- @can('view-users')
+                 <li>
+                    <a href="{{ route('admin.users.index', ['role' => 'Member']) }}" class="nav-item {{ request('role') == 'Member' ? 'active' : '' }}">
+                        <i class="fas fa-users nav-icon"></i>
+                        <span>Active Members</span>
+                    </a>
+                </li>
+                @endcan --}}
+            </ul>
+        </div>
+        @endcanany
+
+                {{-- ... Other sections ... --}}
+        @canany(['manage-payments', 'verify-payments', 'manage-payment-accounts'])
+        <div class="nav-section">
+            <div class="nav-section-title">Finance</div>
+            <ul>
+                @canany(['manage-payments', 'verify-payments'])
+                <li>
+                    <a href="{{ route('admin.payments.index') }}" class="nav-item {{ request()->routeIs('admin.payments.*') ? 'active' : '' }}">
+                        <i class="fas fa-money-check-alt nav-icon"></i>
+                        <span>Payment Verifications</span>
+                        {{-- Badge for pending count here later --}}
+                    </a>
+                </li>
+                @endcanany
+                @can('manage-payment-accounts')
+                 <li>
+                    <a href="{{ route('admin.payment-accounts.index') }}" class="nav-item {{ request()->routeIs('admin.payment-accounts.*') ? 'active' : '' }}">
+                        <i class="fas fa-landmark nav-icon"></i>
+                        <span>Payment Accounts</span>
+                    </a>
+                </li>
+                @endcan
+                {{-- Add link to financial reports later --}}
+            </ul>
+        </div>
+        @endcanany
+
         {{-- Location Management Section Placeholder --}}
         @canany(['manage-divisions', 'manage-districts', 'manage-upazilas'])
         <div class="nav-section">

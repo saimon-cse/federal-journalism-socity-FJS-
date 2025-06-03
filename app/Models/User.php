@@ -32,6 +32,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_profile_public',
         'user_type',
         'email_verified_at', // Added this
+        'membership_application_status', // Added
+         'membership_rejection_reason', // Added
     ];
 
     /**
@@ -96,5 +98,11 @@ class User extends Authenticatable implements MustVerifyEmail
         }
         // You might want a default avatar from settings or a placeholder
         return asset(Setting::get('default_user_avatar', 'backend/assets/images/default-avatar.png'));
+    }
+
+    // payments relationship
+    public function payments()
+    {
+        return $this->morphMany(Payment::class, 'payable');
     }
 }

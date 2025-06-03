@@ -4,14 +4,23 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\UserProfile; // Added
+use App\Models\UserAddress; // Added
+use App\Models\UserEducationRecord; // Added
+use App\Models\UserProfessionalExperience; // Added
+use App\Models\UserSocialLink; // Added
+use App\Models\Division; // For address forms
+use App\Models\District; // For address forms
+use App\Models\Upazila;  // For address forms
 use Spatie\Permission\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage; // Added for file handling
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
-use App\Http\Requests\Admin\StoreUserRequest; // Create this
-use App\Http\Requests\Admin\UpdateUserRequest; // Create this
+use App\Http\Requests\Admin\StoreUserRequest;
+use App\Http\Requests\Admin\UpdateUserRequest;
 
 class UserController extends Controller
 {
@@ -86,23 +95,29 @@ class UserController extends Controller
         return view('admin.users.show', compact('user'));
     }
 
-    public function edit(User $user): View
+   public function edit(User $user): View // Update this method too
     {
-        // Prevent editing Super-Admin unless the current user is also Super-Admin and not editing themselves (or allow self-edit via profile page)
         if ($user->hasRole('Super-Admin') && !auth()->user()->hasRole('Super-Admin')) {
             abort(403, 'You are not authorized to edit a Super-Admin user.');
         }
-        if ($user->hasRole('Super-Admin') && auth()->user()->id !== $user->id && !auth()->user()->hasAllRoles(Role::where('name', 'Super-Admin')->first())) {
-             // Prevent other Super-Admins from editing another Super-Admin unless specific logic allows
-        }
-
 
         $roles = Role::orderBy('name')->get();
         $userRoles = $user->roles->pluck('name')->toArray();
-        $user->load('profile'); // Eager load profile
+        $user->load([
+            'profile',
+            'addresses.division', 'addresses.district', 'addresses.upazila', // Eager load relations for addresses
+            'educationRecords',
+            'professionalExperiences',
+            'socialLinks'
+        ]);
 
-        return view('admin.users.edit', compact('user', 'roles', 'userRoles'));
+        // For address dropdowns
+        $divisions = Division::orderBy('name_en')->get();
+        // Districts and Upazilas can be loaded via AJAX or passed if small sets
+
+        return view('admin.users.edit', compact('user', 'roles', 'userRoles', 'divisions'));
     }
+
 
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
@@ -112,66 +127,158 @@ class UserController extends Controller
 
         $validated = $request->validated();
 
+        // --- User Table Update ---
         $userData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone_number' => $validated['phone_number'] ?? null,
         ];
-
         if (!empty($validated['password'])) {
             $userData['password'] = Hash::make($validated['password']);
         }
-
         if ($request->has('email_verified')) {
             $userData['email_verified_at'] = now();
-        } else if ($request->filled('email_verified_at_cleared')) { // Hidden field to clear verification
+        } elseif ($request->filled('email_verified_at_cleared') && $validated['email_verified_at_cleared']) {
             $userData['email_verified_at'] = null;
         }
 
-
+        // Handle profile picture upload for User model
+        if ($request->hasFile('profile_picture')) {
+            if ($user->profile_picture_path && Storage::disk('public')->exists($user->profile_picture_path)) {
+                Storage::disk('public')->delete($user->profile_picture_path);
+            }
+            $userData['profile_picture_path'] = $request->file('profile_picture')->store('profile_pictures', 'public');
+        }
         $user->update($userData);
 
-        // Update/Create UserProfile
-        $user->profile()->updateOrCreate(
-            ['user_id' => $user->id],
-            [
-                'father_name' => $validated['father_name'] ?? $user->profile->father_name ?? null,
-                // Add other profile fields
-            ]
-        );
 
+        // --- UserProfile Update ---
+        $profileData = $validated['profile'] ?? [];
+        if ($request->hasFile('profile.nid_file')) {
+            if ($user->profile && $user->profile->nid_path && Storage::disk('public')->exists($user->profile->nid_path)) {
+                Storage::disk('public')->delete($user->profile->nid_path);
+            }
+            $profileData['nid_path'] = $request->file('profile.nid_file')->store('user_documents/nids', 'public');
+        }
+        if ($request->hasFile('profile.passport_file')) {
+            if ($user->profile && $user->profile->passport_path && Storage::disk('public')->exists($user->profile->passport_path)) {
+                Storage::disk('public')->delete($user->profile->passport_path);
+            }
+            $profileData['passport_path'] = $request->file('profile.passport_file')->store('user_documents/passports', 'public');
+        }
+        $user->profile()->updateOrCreate(['user_id' => $user->id], $profileData);
+
+
+        // --- UserAddresses Update/Create/Delete ---
+        if (isset($validated['addresses'])) {
+            $existingAddressIds = $user->addresses->pluck('id')->toArray();
+            $submittedAddressIds = [];
+
+            foreach ($validated['addresses'] as $addressData) {
+                if (!empty($addressData['_delete']) && !empty($addressData['id'])) {
+                    UserAddress::find($addressData['id'])->delete(); // Or soft delete
+                    continue;
+                }
+                if (empty(array_filter($addressData, fn($value) => $value !== null && $value !== false && $value !== ''))) { // Skip if all fields empty except id/_delete
+                     if(isset($addressData['id']) && in_array($addressData['id'], $existingAddressIds)){ // If it's an existing empty submitted address, delete it.
+                         UserAddress::find($addressData['id'])->delete();
+                     }
+                    continue;
+                }
+
+
+                unset($addressData['_delete']); // Remove delete flag before saving
+                $address = $user->addresses()->updateOrCreate(
+                    ['id' => $addressData['id'] ?? null], // Update if ID exists, else create
+                    $addressData
+                );
+                $submittedAddressIds[] = $address->id;
+            }
+            // Delete addresses that were present before but not in this submission
+            $addressesToDelete = array_diff($existingAddressIds, $submittedAddressIds);
+            if (!empty($addressesToDelete)) {
+                UserAddress::destroy($addressesToDelete);
+            }
+        } else {
+            $user->addresses()->delete(); // Delete all if 'addresses' key is not present (meaning all were removed from form)
+        }
+
+
+        // --- UserEducationRecords Update/Create/Delete ---
+        $this->syncHasMany($user, 'educationRecords', $validated['education'] ?? []);
+
+        // --- UserProfessionalExperiences Update/Create/Delete ---
+        $this->syncHasMany($user, 'professionalExperiences', $validated['experience'] ?? []);
+
+        // --- UserSocialLinks Update/Create/Delete ---
+        $this->syncHasMany($user, 'socialLinks', $validated['social_links'] ?? []);
+
+
+        // --- Role Syncing (from previous implementation) ---
         if (!empty($validated['roles'])) {
-            // Prevent removing Super-Admin role from the last Super-Admin or from self if user is SA
             if ($user->hasRole('Super-Admin') && !in_array('Super-Admin', $validated['roles'])) {
                 $superAdminCount = User::role('Super-Admin')->count();
-                if ($superAdminCount <= 1) {
-                    return back()->with('error', 'Cannot remove the Super-Admin role from the last Super-Admin user.')->withInput();
+                if ($superAdminCount <= 1 && $user->id === auth()->id()) { // If it's the only SA and it's themselves
+                     return back()->with('error', 'You cannot remove the Super-Admin role from yourself as the last Super-Admin.')->withInput();
                 }
-                if (auth()->user()->id === $user->id) {
-                    return back()->with('error', 'You cannot remove the Super-Admin role from yourself.')->withInput();
+                if ($superAdminCount <= 1) {
+                    // Prevent removing from last super admin if not self
+                     return back()->with('error', 'Cannot remove the Super-Admin role from the last Super-Admin user.')->withInput();
                 }
             }
             $user->syncRoles($validated['roles']);
-        } else {
-            // If roles array is empty, detach all roles unless it's the last Super-Admin
-            if ($user->hasRole('Super-Admin')) {
+        } else { // No roles submitted
+             if ($user->hasRole('Super-Admin')) {
                 $superAdminCount = User::role('Super-Admin')->count();
-                 if ($superAdminCount <= 1 && auth()->user()->id === $user->id) {
-                     // Allow removing other roles but keep Super-Admin
-                     $user->syncRoles(['Super-Admin']);
-                 } else if ($superAdminCount <= 1) {
+                 if ($superAdminCount <= 1) {
                     return back()->with('error', 'Cannot remove all roles from the last Super-Admin user. Must retain Super-Admin role.')->withInput();
-                 } else {
-                    $user->syncRoles([]); // Detach all roles
                  }
-            } else {
-                $user->syncRoles([]);
             }
+            $user->syncRoles([]); // Detach all roles if not the last super admin
         }
 
-        return redirect()->route('admin.users.index')->with('success', 'User updated successfully.');
+
+        return redirect()->route('admin.users.index')->with('success', 'User profile updated successfully.');
     }
 
+    /**
+     * Helper function to sync hasMany relationships with create, update, delete logic.
+     */
+    protected function syncHasMany(User $user, string $relationName, array $submittedData): void
+    {
+        $existingIds = $user->{$relationName}->pluck('id')->toArray();
+        $processedIds = [];
+
+        foreach ($submittedData as $itemData) {
+            if (!empty($itemData['_delete']) && !empty($itemData['id'])) {
+                $user->{$relationName}()->find($itemData['id'])->delete(); // Or soft delete
+                continue;
+            }
+
+            // Check if all relevant fields (excluding id and _delete) are empty
+            $relevantData = $itemData;
+            unset($relevantData['id'], $relevantData['_delete']);
+            if (empty(array_filter($relevantData))) { // If all other fields are empty/null/false
+                 if(isset($itemData['id']) && in_array($itemData['id'], $existingIds)) { // if it's an existing item submitted as empty
+                     $user->{$relationName}()->find($itemData['id'])->delete();
+                 }
+                continue;
+            }
+
+            unset($itemData['_delete']);
+            $item = $user->{$relationName}()->updateOrCreate(
+                ['id' => $itemData['id'] ?? null],
+                $itemData
+            );
+            $processedIds[] = $item->id;
+        }
+
+        // Delete items that were not in the submission
+        $idsToDelete = array_diff($existingIds, $processedIds);
+        if (!empty($idsToDelete)) {
+            $user->{$relationName}()->whereIn('id', $idsToDelete)->delete();
+        }
+    }
 
     public function updateRoles(Request $request, User $user): RedirectResponse
     {

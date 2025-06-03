@@ -14,6 +14,8 @@ return new class extends Migration
             $table->foreignId('category_id')->nullable()->constrained('categories')->onDelete('set null');
             $table->boolean('is_visible_on_website')->default(false);
             // Bio moved to user_profiles
+
+            $table->text('bio')->nullable(); // Consider moving to user_profiles table
             $table->string('expertise_areas')->nullable(); // Consider a pivot table resource_person_expertise for multiple
             $table->timestamps();
         });

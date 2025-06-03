@@ -37,6 +37,9 @@ class RouteServiceProvider extends ServiceProvider
         // Add this for admin routes
         Route::middleware('web') // Or 'auth' if all admin routes require login immediately
             ->group(base_path('routes/admin.php'));
+
+        Route::middleware('web') // Or 'auth' if all admin routes require login immediately
+            ->group(base_path('routes/frontend.php'));
     });
     }
 
