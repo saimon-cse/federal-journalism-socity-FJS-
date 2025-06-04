@@ -8,16 +8,16 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('messages', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('conversation_id')->constrained('conversations')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->text('body');
-            $table->string('attachment_path')->nullable();
-            $table->string('attachment_type')->nullable();
-            $table->timestamps();
-            $table->softDeletes();
-        });
+        // Schema::create('messages', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->foreignId('conversation_id')->constrained('conversations')->onDelete('cascade');
+        //     $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+        //     $table->text('body');
+        //     $table->string('attachment_path')->nullable();
+        //     $table->string('attachment_type')->nullable();
+        //     $table->timestamps();
+        //     $table->softDeletes();
+        // });
     }
 
     public function down()
