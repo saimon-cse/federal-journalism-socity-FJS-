@@ -75,57 +75,8 @@ use App\Models\Setting;
         </div>
         @endcanany
 
-                {{-- ... Other sections ... --}}
-        @canany(['manage-memberships', 'view-memberships'])
-        <div class="nav-section">
-            <div class="nav-section-title">Membership</div>
-            <ul>
-                <li>
-                    <a href="{{ route('admin.membership.applications.index') }}" class="nav-item {{ request()->routeIs('admin.membership.applications.*') ? 'active' : '' }}">
-                        <i class="fas fa-id-card-alt nav-icon"></i>
-                        <span>Applications</span>
-                        {{-- You can add a badge for pending count here later --}}
-                    </a>
-                </li>
-                 {{-- Add link to list all active members later --}}
-                 {{-- @can('view-users')
-                 <li>
-                    <a href="{{ route('admin.users.index', ['role' => 'Member']) }}" class="nav-item {{ request('role') == 'Member' ? 'active' : '' }}">
-                        <i class="fas fa-users nav-icon"></i>
-                        <span>Active Members</span>
-                    </a>
-                </li>
-                @endcan --}}
-            </ul>
-        </div>
-        @endcanany
 
-                {{-- ... Other sections ... --}}
-        @canany(['manage-payments', 'verify-payments', 'manage-payment-accounts'])
-        <div class="nav-section">
-            <div class="nav-section-title">Finance</div>
-            <ul>
-                @canany(['manage-payments', 'verify-payments'])
-                <li>
-                    <a href="{{ route('admin.payments.index') }}" class="nav-item {{ request()->routeIs('admin.payments.*') ? 'active' : '' }}">
-                        <i class="fas fa-money-check-alt nav-icon"></i>
-                        <span>Payment Verifications</span>
-                        {{-- Badge for pending count here later --}}
-                    </a>
-                </li>
-                @endcanany
-                @can('manage-payment-accounts')
-                 <li>
-                    <a href="{{ route('admin.payment-accounts.index') }}" class="nav-item {{ request()->routeIs('admin.payment-accounts.*') ? 'active' : '' }}">
-                        <i class="fas fa-landmark nav-icon"></i>
-                        <span>Payment Accounts</span>
-                    </a>
-                </li>
-                @endcan
-                {{-- Add link to financial reports later --}}
-            </ul>
-        </div>
-        @endcanany
+
 
         {{-- Location Management Section Placeholder --}}
         @canany(['manage-divisions', 'manage-districts', 'manage-upazilas'])
@@ -160,6 +111,71 @@ use App\Models\Setting;
         </div>
         @endcanany
 
+
+        {{-- ... other sidebar items ... --}}
+
+{{-- Financial Management Section --}}
+@canany(['manage-finances', 'view-all-payments', 'manage-payment-accounts', 'manage-payment-method-settings', 'view-financial-reports', 'manage-financial-categories'])
+<div class="nav-section">
+    <div class="nav-section-title">Financials</div>
+    <ul>
+        <li class="nav-dropdown">
+            <a href="#" class="nav-item dropdown-toggle
+                {{ ( request()->routeIs('admin.payments.*') ||
+                     request()->routeIs('admin.payment-accounts.*') ||
+                     request()->routeIs('admin.payment-methods.*') ||
+                     request()->routeIs('admin.financial-ledgers.*') ||
+                     request()->routeIs('admin.financial-transaction-categories.*')
+                   ) ? 'active active-parent' : '' }}">
+                <i class="fas fa-coins nav-icon"></i>
+                <span>Finance & Payments</span>
+                <i class="fas fa-chevron-down dropdown-icon"></i>
+            </a>
+            <ul class="dropdown-menu
+                {{ ( request()->routeIs('admin.payments.*') ||
+                     request()->routeIs('admin.payment-accounts.*') ||
+                     request()->routeIs('admin.payment-methods.*') ||
+                     request()->routeIs('admin.financial-ledgers.*') ||
+                     request()->routeIs('admin.financial-transaction-categories.*')
+                    ) ? 'dropdown-open' : '' }}">
+
+                @can('view-all-payments')
+                <li><a href="{{ route('admin.payments.index') }}" class="dropdown-item {{ request()->routeIs('admin.payments.*') ? 'active' : '' }}">
+                    <i class="fas fa-receipt nav-icon"></i><span>All Payments</span></a>
+                </li>
+                @endcan
+
+                @can('manage-payment-accounts')
+                <li><a href="{{ route('admin.payment-accounts.index') }}" class="dropdown-item {{ request()->routeIs('admin.payment-accounts.*') ? 'active' : '' }}">
+                    <i class="fas fa-university nav-icon"></i><span>Payment Accounts</span></a>
+                </li>
+                @endcan
+
+                @can('manage-payment-method-settings')
+                <li><a href="{{ route('admin.payment-methods.index') }}" class="dropdown-item {{ request()->routeIs('admin.payment-methods.*') ? 'active' : '' }}">
+                    <i class="fas fa-credit-card nav-icon"></i><span>Payment Methods</span></a>
+                </li>
+                @endcan
+
+                @can('manage-financial-categories')
+                <li><a href="{{ route('admin.financial-transaction-categories.index') }}" class="dropdown-item {{ request()->routeIs('admin.financial-transaction-categories.*') ? 'active' : '' }}">
+                    <i class="fas fa-tags nav-icon"></i><span>Transaction Categories</span></a>
+                </li>
+                @endcan
+
+                @canany(['record-income', 'record-expense', 'view-financial-reports'])
+                <li><a href="{{ route('admin.financial-ledgers.index') }}" class="dropdown-item {{ request()->routeIs('admin.financial-ledgers.*') ? 'active' : '' }}">
+                    <i class="fas fa-book nav-icon"></i><span>Financial Ledger</span></a>
+                </li>
+                @endcan
+            </ul>
+        </li>
+    </ul>
+</div>
+@endcanany
+
+{{-- ... other sidebar items ... --}}
+
         {{-- Settings Section --}}
         @can('manage-settings')
         <div class="nav-section">
@@ -180,7 +196,7 @@ use App\Models\Setting;
     <div class="nav-user">
         <div class="user-avatar">
              @if(Auth::user()->profile_picture_path)
-                <img src="{{ asset('storage/' . Auth::user()->profile_picture_path) }}" alt="{{ Auth::user()->name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                <img src="{{ asset( Auth::user()->profile_picture_path) }}" alt="{{ Auth::user()->name }}" style="width: 100%; height: 100%; object-fit: cover;">
             @else
                 <i class="fas fa-user"></i> {{-- Fallback icon --}}
             @endif
@@ -196,3 +212,7 @@ use App\Models\Setting;
     Your CSS snippet has it standalone, which means app.blade.php might be a better place if it's not part of the navbar.
     However, the navbar snippet you provided *also* has a mobile-toggle-btn. Let's assume the one in the navbar is the primary one.
 --}}
+
+<script>
+
+</script>

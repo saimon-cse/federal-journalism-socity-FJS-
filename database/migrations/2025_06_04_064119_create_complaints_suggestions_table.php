@@ -1,7 +1,3 @@
-# Command to generate the migration file
-php artisan make:migration create_complaints_suggestions_table --create=complaints_suggestions
-
-# Content for the generated database/migrations/YYYY_MM_DD_HHMMSS_create_complaints_suggestions_table.php file:
 <?php
 // database/migrations/xxxx_xx_xx_xxxxxx_create_complaints_suggestions_table.php
 use Illuminate\Database\Migrations\Migration;

@@ -42,7 +42,7 @@ Route::middleware(['auth', 'verified'])
 
         // Permission Management
         Route::middleware(['permission:manage-permissions|view-permissions'])
-             ->resource('permissions', PermissionController::class)->only(['index', 'show']);
+            ->resource('permissions', PermissionController::class)->only(['index', 'show']);
 
         // Geographic Data Management (Optional - if admin needs to manage these beyond seeders)
         /*
@@ -59,7 +59,7 @@ Route::middleware(['auth', 'verified'])
             Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
             Route::post('settings', [SettingController::class, 'store'])->name('settings.store');
         });
-        */
+
 
 
         Route::middleware(['permission:manage-memberships|view-memberships']) // New permission
@@ -70,32 +70,72 @@ Route::middleware(['auth', 'verified'])
                 Route::get('/{user}/review', [MembershipApplicationController::class, 'review'])->name('review'); // User model is applicant
                 Route::post('/{user}/approve', [MembershipApplicationController::class, 'approve'])->name('approve')->middleware('permission:manage-memberships');
                 Route::post('/{user}/reject', [MembershipApplicationController::class, 'reject'])->name('reject')->middleware('permission:manage-memberships');
-        });
-});
-
-
-// ... other admin routes
-use App\Http\Controllers\Admin\PaymentAccountController; // New
-use App\Http\Controllers\Admin\PaymentVerificationController; // New
-
-Route::middleware(['auth', 'verified'])
-    ->prefix('admin')
-    ->name('admin.')
-    ->group(function () {
-        // ... other admin routes
-
-        // Payment Accounts Management
-        Route::middleware(['permission:manage-settings|manage-payment-accounts']) // New permission
-            ->resource('payment-accounts', PaymentAccountController::class);
-
-        // Payment Verification
-        Route::middleware(['permission:manage-payments|verify-payments']) // New permissions
-            ->prefix('payments')
-            ->name('payments.')
-            ->group(function () {
-                Route::get('/', [PaymentVerificationController::class, 'index'])->name('index');
-                Route::get('/{payment}/review', [PaymentVerificationController::class, 'review'])->name('review');
-                Route::post('/{payment}/verify', [PaymentVerificationController::class, 'verify'])->name('verify');
-                Route::post('/{payment}/reject', [PaymentVerificationController::class, 'reject'])->name('reject');
             });
+
+        */
+    });
+
+
+// // ... other admin routes
+// use App\Http\Controllers\Admin\PaymentAccountController; // New
+// use App\Http\Controllers\Admin\PaymentVerificationController; // New
+
+// Route::middleware(['auth', 'verified'])
+//     ->prefix('admin')
+//     ->name('admin.')
+//     ->group(function () {
+//         // ... other admin routes
+
+//         // Payment Accounts Management
+//         Route::middleware(['permission:manage-settings|manage-payment-accounts']) // New permission
+//             ->resource('payment-accounts', PaymentAccountController::class);
+
+//         // Payment Verification
+//         Route::middleware(['permission:manage-payments|verify-payments']) // New permissions
+//             ->prefix('payments')
+//             ->name('payments.')
+//             ->group(function () {
+//                 Route::get('/', [PaymentVerificationController::class, 'index'])->name('index');
+//                 Route::get('/{payment}/review', [PaymentVerificationController::class, 'review'])->name('review');
+//                 Route::post('/{payment}/verify', [PaymentVerificationController::class, 'verify'])->name('verify');
+//                 Route::post('/{payment}/reject', [PaymentVerificationController::class, 'reject'])->name('reject');
+//             });
+//     });
+
+
+use App\Http\Controllers\Admin\PaymentAccountController;
+use App\Http\Controllers\Admin\PaymentMethodController;
+use App\Http\Controllers\Admin\PaymentController;
+use App\Http\Controllers\Admin\FinancialLedgerController;
+use App\Http\Controllers\Admin\FinancialTransactionCategoryController;
+
+// ... other routes
+
+Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+    // ... other admin routes (dashboard, users, roles etc.)
+
+    // Payment Accounts Management
+    Route::resource('payment-accounts', PaymentAccountController::class)->except(['show']);
+
+    // Payment Methods Management
+    Route::resource('payment-methods', PaymentMethodController::class)->except(['show']);
+
+    // Payments Overview & Verification
+    Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
+    Route::get('payments/{payment}', [PaymentController::class, 'show'])->name('payments.show'); // To view payment details
+    Route::post('payments/{payment}/verify', [PaymentController::class, 'verify'])->name('payments.verify'); // For manual verification action
+    Route::post('payments/{payment}/reject', [PaymentController::class, 'reject'])->name('payments.reject'); // For rejecting a manual payment
+
+    // Financial Transaction Categories (Needed for Ledger)
+    Route::resource('financial-transaction-categories', FinancialTransactionCategoryController::class)->except(['show']);
+
+    // Financial Ledger Management
+    Route::get('financial-ledgers', [FinancialLedgerController::class, 'index'])->name('financial-ledgers.index');
+    Route::get('financial-ledgers/create', [FinancialLedgerController::class, 'create'])->name('financial-ledgers.create');
+    Route::post('financial-ledgers', [FinancialLedgerController::class, 'store'])->name('financial-ledgers.store');
+    // Edit/Delete for ledger entries might be complex or disallowed depending on accounting practices.
+    // Route::get('financial-ledgers/{financialLedger}/edit', [FinancialLedgerController::class, 'edit'])->name('financial-ledgers.edit');
+    // Route::put('financial-ledgers/{financialLedger}', [FinancialLedgerController::class, 'update'])->name('financial-ledgers.update');
+    // Route::delete('financial-ledgers/{financialLedger}', [FinancialLedgerController::class, 'destroy'])->name('financial-ledgers.destroy');
+
 });

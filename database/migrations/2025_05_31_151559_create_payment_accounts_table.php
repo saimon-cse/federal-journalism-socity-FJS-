@@ -100,7 +100,7 @@ return new class extends Migration {
             $table->text('notes')->nullable(); // General notes for this payment record
             $table->timestamps();
 
-            $table->index(['payable_type', 'payable_id']);
+            // $table->morphs('payable');
             $table->index('status');
         });
 
@@ -147,7 +147,7 @@ return new class extends Migration {
 
             // Link to originating application-level records
             $table->foreignId('payment_id')->nullable()->comment('Originating Payment record from users module')->constrained('payments')->nullOnDelete();
-            $table->morphs('referenceable')->nullable(); // Optional: Link to Event, Training, AllowanceApplication etc.
+            $table->morphs('referenceable'); // Optional: Link to Event, Training, AllowanceApplication etc.
 
             // External Party Details (if applicable, e.g., for an expense to a vendor)
             $table->string('external_party_name')->nullable();

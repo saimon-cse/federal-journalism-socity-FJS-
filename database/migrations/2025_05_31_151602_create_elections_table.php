@@ -15,7 +15,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->date('election_date')->nullable();
             $table->timestamp('nomination_start_datetime');
-            $table->timestamp('nomination_end_datetime');
+            $table->timestamp('nomination_end_datetime')->nullable();
             $table->timestamp('withdrawal_end_datetime')->nullable();
             $table->timestamp('results_declared_at')->nullable();
 

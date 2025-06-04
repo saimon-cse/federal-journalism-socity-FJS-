@@ -9,6 +9,33 @@
     </a>
 @endsection
 
+@section('styles')
+<style>
+    /* In your style.css if you want custom DL styling */
+.dl-horizontal dt { /* If you add this class to dl */
+    float: left;
+    width: 160px; /* Adjust as needed */
+    overflow: hidden;
+    clear: left;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600; /* From your current dt style */
+    color: var(--gray-600); /* Example color */
+}
+.dl-horizontal dd {
+    margin-left: 180px; /* Adjust based on dt width + gap */
+    margin-bottom: var(--spacing-2);
+}
+/* Clearfix for the dl if using floats */
+.dl-horizontal::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+</style>
+@endsection
+
 @section('content')
 <div class="row">
     <div class="col-md-6">
@@ -17,7 +44,7 @@
                 <h3 class="card-title">Permission Information</h3>
             </div>
             <div class="card-body">
-                <dl class="row">
+                <dl class="dl-horizontal">
                     <dt class="col-sm-4">ID</dt>
                     <dd class="col-sm-8">{{ $permission->id }}</dd>
 

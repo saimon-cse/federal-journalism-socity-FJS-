@@ -25,8 +25,22 @@ return new class extends Migration
             $table->timestamps();
         });
 
+          // 6. Document Types Master Table (Ensure this is created before allowance_type_document_type)
+        // This should be in its own migration file if not already.
+        if (!Schema::hasTable('document_types')) {
+            Schema::create('document_types', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->text('description')->nullable();
+                $table->string('allowed_file_types')->nullable();
+                $table->integer('max_file_size')->default(5120); // KB
+                $table->boolean('is_active')->default(true);
+                $table->timestamps();
+            });
+        }
+
         // NEW Pivot Table: allowance_type_document_type
-        Schema::create('allowance_type_document_type', function (Blueprint $table) {
+        Schema::create('allowance_document_type', function (Blueprint $table) {
             $table->id();
             $table->foreignId('allowance_type_id')->constrained('allowance_types')->cascadeOnDelete();
             $table->foreignId('document_type_id')->constrained('document_types')->cascadeOnDelete(); // Assumes document_types table exists
@@ -112,19 +126,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // 6. Document Types Master Table (Ensure this is created before allowance_type_document_type)
-        // This should be in its own migration file if not already.
-        if (!Schema::hasTable('document_types')) {
-            Schema::create('document_types', function (Blueprint $table) {
-                $table->id();
-                $table->string('name');
-                $table->text('description')->nullable();
-                $table->string('allowed_file_types')->nullable();
-                $table->integer('max_file_size')->default(5120); // KB
-                $table->boolean('is_active')->default(true);
-                $table->timestamps();
-            });
-        }
+
 
 
         // 7. Application Status Log Table (Keep as it was or in its separate migration)
