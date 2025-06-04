@@ -9,34 +9,40 @@ class District extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'division_id',
-        'name_en',
-        'name_bn',
-    ];
+    protected $fillable = ['division_id', 'name_en', 'name_bn', 'slug'];
 
-    /**
-     * Get the division that owns the district.
-     */
     public function division()
     {
         return $this->belongsTo(Division::class);
     }
 
-    /**
-     * Get the upazilas for the district.
-     */
     public function upazilas()
     {
         return $this->hasMany(Upazila::class);
     }
 
-    /**
-     * Get the user addresses for the district.
-     * (Optional, if you need to query users by district directly)
-     */
     public function userAddresses()
     {
         return $this->hasMany(UserAddress::class);
+    }
+
+    public function committees()
+    {
+        return $this->hasMany(Committee::class, 'district_id');
+    }
+
+    public function electionsTargeted()
+    {
+        return $this->hasMany(Election::class, 'target_district_id');
+    }
+
+    public function announcementsTargeted()
+    {
+        return $this->belongsToMany(Announcement::class, 'announcement_district');
+    }
+
+    public function trainingsTargeted()
+    {
+        return $this->belongsToMany(Training::class, 'training_target_districts');
     }
 }

@@ -9,26 +9,30 @@ class Upazila extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'district_id',
-        'name_en',
-        'name_bn',
-    ];
+    protected $fillable = ['district_id', 'name_en', 'name_bn', 'slug'];
 
-    /**
-     * Get the district that owns the upazila.
-     */
     public function district()
     {
         return $this->belongsTo(District::class);
     }
 
-    /**
-     * Get the user addresses for the upazila.
-     * (Optional, if you need to query users by upazila directly)
-     */
     public function userAddresses()
     {
         return $this->hasMany(UserAddress::class);
+    }
+
+    public function committees()
+    {
+        return $this->hasMany(Committee::class, 'upazila_id');
+    }
+
+    public function electionsTargeted()
+    {
+        return $this->hasMany(Election::class, 'target_upazila_id');
+    }
+
+    public function announcementsTargeted()
+    {
+        return $this->belongsToMany(Announcement::class, 'announcement_upazila');
     }
 }

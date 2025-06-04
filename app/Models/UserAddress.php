@@ -11,52 +11,35 @@ class UserAddress extends Model
 
     protected $fillable = [
         'user_id',
-        'address_type', // 'permanent', 'present', 'work'
+        'address_type',
         'division_id',
         'district_id',
         'upazila_id',
-        'address_line1',
-        'address_line2',
+        'street_address',
         'postal_code',
-        'is_primary', // boolean
+        'address_details',
+        'is_primary',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array
-     */
     protected $casts = [
         'is_primary' => 'boolean',
     ];
 
-    /**
-     * Get the user that owns the address.
-     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get the division for the address.
-     */
     public function division()
     {
         return $this->belongsTo(Division::class);
     }
 
-    /**
-     * Get the district for the address.
-     */
     public function district()
     {
         return $this->belongsTo(District::class);
     }
 
-    /**
-     * Get the upazila for the address.
-     */
     public function upazila()
     {
         return $this->belongsTo(Upazila::class);
