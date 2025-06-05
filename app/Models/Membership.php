@@ -9,9 +9,10 @@ class Membership extends Model
 {
     use HasFactory;
 
+    // Remove 'membership_type' string field from fillable
     protected $fillable = [
         'user_id',
-        'membership_type',
+        'membership_type_id', // ADD THIS
         'start_date',
         'end_date',
         'status',
@@ -19,6 +20,7 @@ class Membership extends Model
         'next_due_date',
         'approved_by_user_id',
         'approved_at',
+        'remarks',
     ];
 
     protected $casts = [
@@ -34,6 +36,12 @@ class Membership extends Model
         return $this->belongsTo(User::class);
     }
 
+    // ADD THIS RELATIONSHIP
+    public function membershipType()
+    {
+        return $this->belongsTo(MembershipType::class);
+    }
+
     public function approvedBy()
     {
         return $this->belongsTo(User::class, 'approved_by_user_id');
@@ -42,5 +50,22 @@ class Membership extends Model
     public function payments()
     {
         return $this->morphMany(Payment::class, 'payable');
+    }
+
+    public function latestPayment()
+    {
+        return $this->morphOne(Payment::class, 'payable')->latestOfMany();
+    }
+
+    public function activePayment()
+    {
+        return $this->morphOne(Payment::class, 'payable')->where('status', 'successful')->latestOfMany();
+    }
+
+    public function pendingPayment()
+    {
+        return $this->morphOne(Payment::class, 'payable')
+            ->whereIn('status', ['pending_manual_verification', 'pending_user_action'])
+            ->latestOfMany();
     }
 }

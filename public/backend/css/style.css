@@ -1341,4 +1341,31 @@ body.sidebar-open .sidebar-backdrop.show { display: block; opacity: 1; }
     text-rendering: auto; -webkit-font-smoothing: antialiased;
 }
 
+
+
+
+
+    /* In your style.css if you want custom DL styling */
+.dl-horizontal dt { /* If you add this class to dl */
+    float: left;
+    width: 160px; /* Adjust as needed */
+    overflow: hidden;
+    clear: left;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600; /* From your current dt style */
+    color: var(--gray-600); /* Example color */
+}
+.dl-horizontal dd {
+    margin-left: 180px; /* Adjust based on dt width + gap */
+    margin-bottom: var(--spacing-2);
+}
+/* Clearfix for the dl if using floats */
+.dl-horizontal::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
 /* ====== END OF MERGED STYLES ====== */

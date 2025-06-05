@@ -6,6 +6,8 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
+use App\Events\PaymentVerified;           // Add this
+use App\Listeners\ProcessMembershipPayment; // Add this
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -18,6 +20,11 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
+
+        PaymentVerified::class => [         // Add this
+            ProcessMembershipPayment::class, // Add this
+            // \App\Listeners\CreateLedgerEntryForVerifiedPayment::class, // ADD THIS
+        ],                                  // Add this
     ];
 
     /**

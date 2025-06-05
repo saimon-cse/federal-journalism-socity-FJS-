@@ -109,6 +109,12 @@ use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\FinancialLedgerController;
 use App\Http\Controllers\Admin\FinancialTransactionCategoryController;
 
+
+
+use App\Http\Controllers\Admin\MembershipTypeController; // Add this
+
+    use App\Http\Controllers\Admin\MembershipController as AdminMembershipController;
+use App\Http\Controllers\Admin\FinancialReportController;
 // ... other routes
 
 Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
@@ -137,5 +143,44 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     // Route::get('financial-ledgers/{financialLedger}/edit', [FinancialLedgerController::class, 'edit'])->name('financial-ledgers.edit');
     // Route::put('financial-ledgers/{financialLedger}', [FinancialLedgerController::class, 'update'])->name('financial-ledgers.update');
     // Route::delete('financial-ledgers/{financialLedger}', [FinancialLedgerController::class, 'destroy'])->name('financial-ledgers.destroy');
+
+
+
+        Route::prefix('memberships')->name('memberships.')->group(function () {
+            Route::get('/', [AdminMembershipController::class, 'index'])->name('index')->middleware('can:view-memberships');
+            Route::get('/{membership}', [AdminMembershipController::class, 'show'])->name('show')->middleware('can:view-memberships');
+            // Admin approval of application (if it was pending_application)
+            // Route::post('/{membership}/approve-application', [AdminMembershipController::class, 'approveApplication'])->name('approve.application')->middleware('can:manage-memberships');
+            Route::post('/{membership}/reject-application', [AdminMembershipController::class, 'rejectApplication'])->name('reject.application')->middleware('can:manage-memberships');
+            // Manual activation/update (use with caution)
+            Route::get('/{membership}/edit', [AdminMembershipController::class, 'edit'])->name('edit')->middleware('can:manage-memberships');
+            Route::put('/{membership}', [AdminMembershipController::class, 'update'])->name('update')->middleware('can:manage-memberships');
+        });
+// In routes/web.php (admin group)
+
+
+Route::resource('membership-types', MembershipTypeController::class)->except(['show']);
+
+// In routes/web.php (admin group)
+
+
+// Existing report routes...
+Route::prefix('reports')->name('reports.')->middleware('can:view-financial-reports')->group(function () {
+    Route::get('/income-statement', [FinancialReportController::class, 'incomeStatement'])->name('income-statement');
+    Route::get('/income-statement/export', [FinancialReportController::class, 'exportIncomeStatement'])->name('income-statement.export'); // Example for specific export route
+
+    Route::get('/balance-sheet', [FinancialReportController::class, 'balanceSheet'])->name('balance-sheet');
+    Route::get('/balance-sheet/export', [FinancialReportController::class, 'exportBalanceSheet'])->name('balance-sheet.export'); // NEW
+
+    Route::get('/cash-flow', [FinancialReportController::class, 'cashFlow'])->name('cash-flow');
+    Route::get('/cash-flow/export', [FinancialReportController::class, 'exportCashFlow'])->name('cash-flow.export'); // NEW
+
+    Route::get('/account-transactions/{paymentAccount}', [FinancialReportController::class, 'accountTransactions'])->name('account-transactions');
+    Route::get('/account-transactions/{paymentAccount}/export', [FinancialReportController::class, 'exportAccountTransactions'])->name('account-transactions.export'); // NEW
+
+    Route::get('/category-summary', [FinancialReportController::class, 'categorySummary'])->name('category-summary');
+    Route::get('/category-summary/export', [FinancialReportController::class, 'exportCategorySummary'])->name('category-summary.export'); // NEW
+});
+
 
 });

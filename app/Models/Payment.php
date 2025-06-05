@@ -53,6 +53,7 @@ class Payment extends Model implements HasMedia
         'verified_at' => 'datetime',
     ];
 
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('payment_proofs')->singleFile();
@@ -68,6 +69,10 @@ class Payment extends Model implements HasMedia
         return $this->morphTo();
     }
 
+    public function financialLedgers()
+{
+    return $this->morphMany(FinancialLedger::class, 'referenceable');
+}
     public function paymentMethod()
     {
         return $this->belongsTo(PaymentMethod::class);

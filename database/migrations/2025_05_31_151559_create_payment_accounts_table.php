@@ -16,6 +16,10 @@ return new class extends Migration {
             $table->string('bank_name')->nullable(); // If bank account
             $table->string('branch_name')->nullable(); // If bank account
             $table->string('routing_number')->nullable(); // If bank account
+            $table->decimal('initial_balance',12,2)->default(0.00); // Initial balance when account is created
+            $table->decimal('current_balance', 15, 2)->default(0.00); // Current balance, can be updated via transactions
+            // Optional: Store current balance as string to avoid precision issues with large numbers
+
             // $table->text('api_credentials_encrypted')->nullable(); // For gateway integrations (ALWAYS ENCRYPT)
             $table->boolean('is_active')->default(true);
             $table->boolean('allow_user_manual_payment_to')->default(false); // Can users be instructed to pay directly to this?
@@ -37,6 +41,7 @@ return new class extends Migration {
             $table->string('logo_path')->nullable();
             $table->boolean('is_active')->default(true);
             $table->integer('sort_order')->default(0);
+
         //    // If this method directs to a specific org account for manual payments
             $table->foreignId('default_manual_account_id')->nullable()->constrained('payment_accounts')->nullOnDelete();
             $table->timestamps();
@@ -99,6 +104,8 @@ return new class extends Migration {
 
             $table->text('notes')->nullable(); // General notes for this payment record
             $table->timestamps();
+            $table->softDeletes();
+
 
             // $table->morphs('payable');
             $table->index('status');

@@ -19,7 +19,7 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4">
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="transaction_datetime">Transaction Date & Time <span class="text-danger">*</span></label>
                             <input type="datetime-local" class="form-control @error('transaction_datetime') is-invalid @enderror" id="transaction_datetime" name="transaction_datetime" value="{{ old('transaction_datetime', now()->format('Y-m-d\TH:i')) }}" required>
                             @error('transaction_datetime')
@@ -28,7 +28,7 @@
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="entry_type">Entry Type <span class="text-danger">*</span></label>
                             <select class="form-select @error('entry_type') is-invalid @enderror" id="entry_type" name="entry_type" required>
                                 <option value="">Select Type</option>
@@ -44,7 +44,7 @@
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="amount">Amount (BDT) <span class="text-danger">*</span></label>
                             <input type="number" step="0.01" class="form-control @error('amount') is-invalid @enderror" id="amount" name="amount" value="{{ old('amount') }}" required>
                             @error('amount')
@@ -54,7 +54,7 @@
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label for="description">Description <span class="text-danger">*</span></label>
                     <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="3" required>{{ old('description') }}</textarea>
                     @error('description')
@@ -62,13 +62,13 @@
                     @enderror
                 </div>
 
-                {{-- Conditional Fields based on Entry Type --}}
-                <div id="income_expense_fields" style="display: none;">
+                {{-- START: Conditional Fields based on Entry Type --}}
+                <div id="income_expense_fields" style="display: none;" class="mb-3">
                     <div class="form-group">
                         <label for="category_id">Category <span class="text-danger">*</span></label>
-                        <select class="form-select @error('category_id') is-invalid @enderror" id="category_id" name="category_id">
+                        <select class="form-select @error('category_id') is-invalid @enderror" id="category_id" name="category_id_dup"> {{-- Name handled by JS --}}
                             <option value="">Select Category</option>
-                            {{-- Options will be populated by JS or you can list all and filter by type --}}
+                            {{-- Options will be populated by JS --}}
                         </select>
                         @error('category_id')
                             <span class="invalid-feedback">{{ $message }}</span>
@@ -76,10 +76,10 @@
                     </div>
                 </div>
 
-                <div id="income_fields" style="display: none;">
+                <div id="income_fields" style="display: none;" class="mb-3">
                      <div class="form-group">
                         <label for="to_payment_account_id_income">To Account (Received In) <span class="text-danger">*</span></label>
-                        <select class="form-select @error('to_payment_account_id') is-invalid @enderror" id="to_payment_account_id_income" name="to_payment_account_id_income_dup"> {{-- Name will be changed by JS --}}
+                        <select class="form-select @error('to_payment_account_id') is-invalid @enderror" id="to_payment_account_id_income" name="to_payment_account_id_income_dup"> {{-- Name handled by JS --}}
                             <option value="">Select Account</option>
                             @foreach($paymentAccounts as $account)
                                 <option value="{{ $account->id }}" {{ old('to_payment_account_id') == $account->id ? 'selected' : '' }}>
@@ -93,10 +93,10 @@
                     </div>
                 </div>
 
-                <div id="expense_fields" style="display: none;">
+                <div id="expense_fields" style="display: none;" class="mb-3">
                     <div class="form-group">
                         <label for="from_payment_account_id_expense">From Account (Paid From) <span class="text-danger">*</span></label>
-                        <select class="form-select @error('from_payment_account_id') is-invalid @enderror" id="from_payment_account_id_expense" name="from_payment_account_id_expense_dup"> {{-- Name will be changed by JS --}}
+                        <select class="form-select @error('from_payment_account_id') is-invalid @enderror" id="from_payment_account_id_expense" name="from_payment_account_id_expense_dup"> {{-- Name handled by JS --}}
                             <option value="">Select Account</option>
                              @foreach($paymentAccounts as $account)
                                 <option value="{{ $account->id }}" {{ old('from_payment_account_id') == $account->id ? 'selected' : '' }}>
@@ -110,7 +110,7 @@
                     </div>
                 </div>
 
-                <div id="transfer_fields" style="display: none;">
+                <div id="transfer_fields" style="display: none;" class="mb-3">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
@@ -143,7 +143,7 @@
                     </div>
                 </div>
 
-                <div id="opening_balance_fields" style="display: none;">
+                <div id="opening_balance_fields" style="display: none;" class="mb-3">
                      <div class="form-group">
                         <label for="to_payment_account_id_opening">Account for Opening Balance <span class="text-danger">*</span></label>
                         <select class="form-select @error('to_payment_account_id') is-invalid @enderror" id="to_payment_account_id_opening" name="to_payment_account_id_opening_dup">
@@ -159,25 +159,43 @@
                         @enderror
                     </div>
                 </div>
+                {{-- END: Conditional Fields --}}
+
+                {{-- START: Link to Payment --}}
+                <div class="form-group mb-3">
+                    <label for="payment_id_link">Link to existing System Payment (Optional)</label>
+                    <select name="payment_id_link" id="payment_id_link" class="form-select @error('payment_id_link') is-invalid @enderror">
+                        <option value="">None</option>
+                        @foreach($paymentsWithoutLedger as $payment) {{-- Pass $paymentsWithoutLedger from controller --}}
+                            <option value="{{ $payment->id }}" {{ old('payment_id_link') == $payment->id ? 'selected' : '' }}>
+                                {{ Str::limit($payment->payment_uuid, 15, '...') }} ({{ number_format($payment->amount_paid, 2) }} BDT - {{ class_basename($payment->payable_type) }} #{{ $payment->payable_id }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <small class="form-text text-muted">If this ledger entry directly corresponds to a user payment already in the system but not yet in the ledger.</small>
+                     @error('payment_id_link') <span class="invalid-feedback">{{ $message }}</span> @enderror
+                </div>
+                {{-- END: Link to Payment --}}
+
 
                 <h5 class="mt-4 mb-3">Additional Details (Optional)</h5>
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="external_party_name">External Party Name</label>
                             <input type="text" class="form-control @error('external_party_name') is-invalid @enderror" id="external_party_name" name="external_party_name" value="{{ old('external_party_name') }}">
                             @error('external_party_name') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="external_reference_id">External Reference ID (e.g., Invoice #, Bank Trx ID)</label>
                             <input type="text" class="form-control @error('external_reference_id') is-invalid @enderror" id="external_reference_id" name="external_reference_id" value="{{ old('external_reference_id') }}">
                             @error('external_reference_id') <span class="invalid-feedback">{{ $message }}</span> @enderror
                         </div>
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label for="internal_notes">Internal Notes</label>
                     <textarea class="form-control @error('internal_notes') is-invalid @enderror" id="internal_notes" name="internal_notes" rows="2">{{ old('internal_notes') }}</textarea>
                     @error('internal_notes') <span class="invalid-feedback">{{ $message }}</span> @enderror
@@ -211,34 +229,33 @@ document.addEventListener('DOMContentLoaded', function () {
     const toAccountTransferSelect = document.getElementById('to_payment_account_id_transfer');
     const toAccountOpeningSelect = document.getElementById('to_payment_account_id_opening');
 
-    const incomeCategories = @json($incomeCategories);
-    const expenseCategories = @json($expenseCategories);
+    const incomeCategories = @json($incomeCategories ?? []);
+    const expenseCategories = @json($expenseCategories ?? []);
+    const oldCategoryId = "{{ old('category_id') }}";
+
 
     function updateCategoryOptions(type) {
         let options = '<option value="">Select Category</option>';
-        if (type === 'income') {
-            incomeCategories.forEach(cat => {
-                options += `<option value="${cat.id}">${cat.name}</option>`;
-            });
-        } else if (type === 'expense') {
-            expenseCategories.forEach(cat => {
-                options += `<option value="${cat.id}">${cat.name}</option>`;
-            });
-        }
+        let categoriesToUse = [];
+        if (type === 'income') categoriesToUse = incomeCategories;
+        else if (type === 'expense') categoriesToUse = expenseCategories;
+
+        categoriesToUse.forEach(cat => {
+            options += `<option value="${cat.id}" ${oldCategoryId == cat.id ? 'selected' : ''}>${cat.name}</option>`;
+        });
         categorySelect.innerHTML = options;
     }
 
     function toggleFields() {
         const selectedType = entryTypeSelect.value;
 
-        // Hide all conditional sections first
         incomeExpenseFields.style.display = 'none';
         incomeFields.style.display = 'none';
         expenseFields.style.display = 'none';
         transferFields.style.display = 'none';
         openingBalanceFields.style.display = 'none';
 
-        // Disable all conditional inputs by default to prevent submission
+        // Set temporary names to prevent them from being submitted if hidden
         categorySelect.name = 'category_id_dup';
         fromAccountExpenseSelect.name = 'from_payment_account_id_expense_dup';
         toAccountIncomeSelect.name = 'to_payment_account_id_income_dup';
@@ -251,28 +268,29 @@ document.addEventListener('DOMContentLoaded', function () {
             incomeExpenseFields.style.display = 'block';
             incomeFields.style.display = 'block';
             updateCategoryOptions('income');
-            categorySelect.name = 'category_id'; // Enable for submission
-            toAccountIncomeSelect.name = 'to_payment_account_id'; // Enable for submission
+            categorySelect.name = 'category_id';
+            toAccountIncomeSelect.name = 'to_payment_account_id';
         } else if (selectedType === 'expense') {
             incomeExpenseFields.style.display = 'block';
             expenseFields.style.display = 'block';
             updateCategoryOptions('expense');
-            categorySelect.name = 'category_id'; // Enable for submission
-            fromAccountExpenseSelect.name = 'from_payment_account_id'; // Enable for submission
+            categorySelect.name = 'category_id';
+            fromAccountExpenseSelect.name = 'from_payment_account_id';
         } else if (selectedType === 'transfer') {
             transferFields.style.display = 'block';
-            fromAccountTransferSelect.name = 'from_payment_account_id'; // Enable for submission
-            toAccountTransferSelect.name = 'to_payment_account_id'; // Enable for submission
+            fromAccountTransferSelect.name = 'from_payment_account_id';
+            toAccountTransferSelect.name = 'to_payment_account_id';
         } else if (selectedType === 'opening_balance') {
             openingBalanceFields.style.display = 'block';
-            toAccountOpeningSelect.name = 'to_payment_account_id'; // Enable for submission
-        } else if (selectedType === 'reconciliation_adjustment') {
-            // No specific extra fields by default, but you could add some
+            toAccountOpeningSelect.name = 'to_payment_account_id';
         }
+        // For reconciliation_adjustment, no specific fields are shown by default here
     }
 
-    entryTypeSelect.addEventListener('change', toggleFields);
-    toggleFields(); // Initial call to set visibility based on old input or default
+    if(entryTypeSelect) {
+        entryTypeSelect.addEventListener('change', toggleFields);
+        toggleFields(); // Initial call to set visibility based on old input or default
+    }
 });
 </script>
 @endsection

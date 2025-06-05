@@ -69,6 +69,15 @@
                             @enderror
                         </div>
                     </div>
+<div class="col-md-6">
+        <div class="form-group">
+            <label for="initial_balance">Initial Balance (BDT) <span class="text-danger">*</span></label>
+            <input type="number" step="0.01" class="form-control @error('initial_balance') is-invalid @enderror" id="initial_balance" name="initial_balance" value="{{ old('initial_balance', '0.00') }}" required>
+            @error('initial_balance')
+                <span class="invalid-feedback">{{ $message }}</span>
+            @enderror
+        </div>
+    </div>
                 </div>
 
                 <h5 class="mt-4 mb-3">Bank Account Details (Optional)</h5>

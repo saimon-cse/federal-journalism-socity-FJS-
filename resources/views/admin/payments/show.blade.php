@@ -8,6 +8,33 @@
         <i class="fas fa-arrow-left"></i> Back to Payments
     </a>
 @endsection
+@section('styles')
+<style>
+    /* In your style.css if you want custom DL styling */
+.dl-horizontal dt { /* If you add this class to dl */
+    float: left;
+    width: 160px; /* Adjust as needed */
+    overflow: hidden;
+    clear: left;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600; /* From your current dt style */
+    color: var(--gray-600); /* Example color */
+}
+.dl-horizontal dd {
+    margin-left: 180px; /* Adjust based on dt width + gap */
+    margin-bottom: var(--spacing-2);
+}
+/* Clearfix for the dl if using floats */
+.dl-horizontal::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+</style>
+@endsection
+
 
 @section('content')
     <div class="row">
@@ -17,7 +44,7 @@
                     <h3 class="card-title">Payment Information</h3>
                 </div>
                 <div class="card-body">
-                    <dl class="row">
+                    <dl class="dl-horizontal">
                         <dt class="col-sm-4">Payment UUID:</dt>
                         <dd class="col-sm-8">{{ $payment->payment_uuid }}</dd>
 
@@ -61,6 +88,7 @@
 
                             <dt class="col-sm-4">Payment Proof:</dt>
                             <dd class="col-sm-8">
+
                                 @if($payment->hasMedia('payment_proofs'))
                                     <a href="{{ $payment->getFirstMediaUrl('payment_proofs') }}" target="_blank">
                                         View Proof <i class="fas fa-external-link-alt fa-xs"></i>

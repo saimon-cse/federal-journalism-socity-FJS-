@@ -32,7 +32,10 @@
 
             <!-- Page Content -->
             <main>
-                {{ $slot }}
+                {{-- {{ $slot }} --}}
+                @yield('content')
+
+                {{-- Session Messages --}}
             </main>
         </div>
     </body>

@@ -86,10 +86,22 @@ class User extends Authenticatable implements HasMedia, MustVerifyEmail // Added
         return $this->hasMany(UserSocialMedia::class);
     }
 
-    public function memberships()
-    {
-        return $this->hasMany(Membership::class);
-    }
+// ... existing User model code ...
+public function memberships()
+{
+    return $this->hasMany(Membership::class);
+}
+
+public function activeMembership()
+{
+    return $this->hasOne(Membership::class)->where('status', 'active')->latestOfMany();
+}
+
+public function latestMembershipApplication()
+{
+    return $this->hasOne(Membership::class)->latestOfMany();
+}
+// ...
 
     public function paymentsMade()
     {
